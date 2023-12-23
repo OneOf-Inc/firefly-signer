@@ -1,0 +1,70 @@
+# Builds and pushes MPC Signer to Amazon ECR. Relies on an OIDC identity provider to authenticate to AWS. Role used
+# must have permissions to publish to public ECR.
+
+name: Build & Push MPC Signer to Amazon ECR
+
+on:
+  # Run if PR is merged to feature/mpc-signer or main branches
+  pull_request:
+    branches: [ "feature/mpc-signer", "main" ]
+    types: [ closed ]
+  # Run manually
+  workflow_dispatch:
+
+env:
+  # AWS Role with permissions to publish to Pulbic ECR
+  AWS_ROLE_ARN: arn:aws:iam::961171757719:role/GithubActions-ECRPublicPowerUser
+  # AWS Region
+  AWS_REGION: us-east-1
+  # ECR Repository name
+  ECR_REPOSITORY: mpc-firefly-signer
+  # ECR Repository alias (for public ECR)
+  ECR_REGISTRY_ALIAS: f8q0b6a6
+
+permissions:
+  # Requests JWT for GitHub Actions to authenticate to AWS
+  id-token: write
+  # Requests read access to the repository
+  contents: read
+
+jobs:
+  build-and-push-to-ecr:
+    # Run if manually triggered or if PR is merged
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.pull_request.merged }}
+    name: Build & Push to ECR
+    runs-on: ubuntu-latest
+    # Set to "prod" environment if running on main branch, otherwise "dev"
+    environment: ${{ github.ref == 'refs/heads/main' && 'prod' || 'dev' }}
+
+    steps:
+      # Checkout the source
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      # Configure AWS credentials against from our OIDC identity provider
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.AWS_ROLE_ARN }}
+          role-session-name: GitHub_to_AWS_via_FederatedOIDC
+          aws-region: ${{ env.AWS_REGION }}
+
+      # Login to AWS ECR Public with our OIDC credentials
+      - name: Login to AWS ECR Public
+        id: login-ecr-public
+        uses: aws-actions/amazon-ecr-login@v2
+        with:
+          registry-type: public
+
+      # Build as amd64 image, tag with sha and "latest", then push to ECR
+      - name: Build, tag, and push image to Amazon ECR Public
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr-public.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker buildx build --platform linux/amd64 \
+            --push \
+            -t $ECR_REGISTRY/$ECR_REGISTRY_ALIAS/$ECR_REPOSITORY:$IMAGE_TAG \
+            -t $ECR_REGISTRY/$ECR_REGISTRY_ALIAS/$ECR_REPOSITORY:latest .
+          echo "image=$ECR_REGISTRY/$ECR_REGISTRY_ALIAS/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT

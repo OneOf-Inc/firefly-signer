@@ -1,4 +1,4 @@
-// Copyright © 2022 Kaleido, Inc.
+// Copyright © 2024 Kaleido, Inc.
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -21,6 +21,7 @@ import (
 	"github.com/hyperledger/firefly-common/pkg/httpserver"
 	"github.com/hyperledger/firefly-common/pkg/wsclient"
 	"github.com/hyperledger/firefly-signer/pkg/fswallet"
+	"github.com/hyperledger/firefly-signer/pkg/mpcwallet"
 	"github.com/spf13/viper"
 )
 
@@ -31,6 +32,8 @@ var (
 	BackendChainID = ffc("backend.chainId")
 	// FileWalletEnabled if the Keystore V3 wallet is enabled
 	FileWalletEnabled = ffc("fileWallet.enabled")
+	// MPCWalletEnabled if the MPC Wallet is enable
+	MPCWalletEnabled = ffc("mpcWallet.enabled")
 )
 
 var ServerConfig config.Section
@@ -40,6 +43,8 @@ var CorsConfig config.Section
 var BackendConfig config.Section
 
 var FileWalletConfig config.Section
+
+var MPCWalletConfig config.Section
 
 func setDefaults() {
 	viper.SetDefault(string(BackendChainID), -1)
@@ -61,4 +66,6 @@ func Reset() {
 	FileWalletConfig = config.RootSection("fileWallet")
 	fswallet.InitConfig(FileWalletConfig)
 
+	MPCWalletConfig = config.RootSection("mpcWallet")
+	mpcwallet.InitConfig(MPCWalletConfig)
 }

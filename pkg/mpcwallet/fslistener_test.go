@@ -14,12 +14,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package fswallet
+package mpcwallet
 
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"testing"
@@ -32,7 +31,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func newEmptyWalletTestDir(t *testing.T, init bool) (context.Context, *fsWallet, chan ethtypes.Address0xHex, func()) {
+func newEmptyWalletTestDir(t *testing.T, init bool) (context.Context, *mpcWallet, chan ethtypes.Address0xHex, func()) {
 	config.RootConfigReset()
 	logrus.SetLevel(logrus.TraceLevel)
 
@@ -40,52 +39,46 @@ func newEmptyWalletTestDir(t *testing.T, init bool) (context.Context, *fsWallet,
 	InitConfig(unitTestConfig)
 	unitTestConfig.Set(ConfigPath, t.TempDir())
 	unitTestConfig.Set(ConfigFilenamesPrimaryMatchRegex, "^((0x)?[0-9a-z]+).key.json$")
-	unitTestConfig.Set(ConfigFilenamesPasswordExt, ".pwd")
 	ctx := context.Background()
 
 	listener := make(chan ethtypes.Address0xHex, 1)
-	ff, err := NewFilesystemWallet(ctx, ReadConfig(unitTestConfig), listener)
+	ff, err := NewMPCWallet(ctx, ReadConfig(unitTestConfig), listener)
 	assert.NoError(t, err)
 	if init {
 		err = ff.Initialize(ctx)
 		assert.NoError(t, err)
 	}
 
-	return ctx, ff.(*fsWallet), listener, func() {
+	return ctx, ff.(*mpcWallet), listener, func() {
 		ff.Close()
 	}
 }
 
 func TestFileListener(t *testing.T) {
 
-	ctx, f, listener1, done := newEmptyWalletTestDir(t, true)
+	_, f, listener1, done := newEmptyWalletTestDir(t, true)
 	defer done()
 
 	// add a 2nd listener
 	listener2 := make(chan ethtypes.Address0xHex, 1)
 	f.AddListener(listener2)
 
-	testPWFIle, err := ioutil.ReadFile("../../test/keystore_toml/1f185718734552d08278aa70f804580bab5fd2b4.pwd")
+	testPWFIle, err := os.ReadFile("../../test/keystore_toml/1f185718734552d08278aa70f804580bab5fd2b4.pwd")
 	assert.NoError(t, err)
 
-	err = ioutil.WriteFile(path.Join(f.conf.Path, "1f185718734552d08278aa70f804580bab5fd2b4.pwd"), testPWFIle, 0644)
+	err = os.WriteFile(path.Join(f.conf.Path, "1f185718734552d08278aa70f804580bab5fd2b4.pwd"), testPWFIle, 0644)
 	assert.NoError(t, err)
 
-	testKeyFIle, err := ioutil.ReadFile("../../test/keystore_toml/1f185718734552d08278aa70f804580bab5fd2b4.key.json")
+	testKeyFIle, err := os.ReadFile("../../test/keystore_toml/1f185718734552d08278aa70f804580bab5fd2b4.key.json")
 	assert.NoError(t, err)
 
-	err = ioutil.WriteFile(path.Join(f.conf.Path, "1f185718734552d08278aa70f804580bab5fd2b4.key.json"), testKeyFIle, 0644)
+	err = os.WriteFile(path.Join(f.conf.Path, "1f185718734552d08278aa70f804580bab5fd2b4.key.json"), testKeyFIle, 0644)
 	assert.NoError(t, err)
 
 	newAddr1 := <-listener1
 	assert.Equal(t, `0x1f185718734552d08278aa70f804580bab5fd2b4`, newAddr1.String())
 	newAddr2 := <-listener2
 	assert.Equal(t, `0x1f185718734552d08278aa70f804580bab5fd2b4`, newAddr2.String())
-
-	addr := *ethtypes.MustNewAddress(`1f185718734552d08278aa70f804580bab5fd2b4`)
-	wf, err := f.GetWalletFile(ctx, addr)
-	assert.NoError(t, err)
-	assert.Equal(t, wf.KeyPair().Address, addr)
 
 }
 

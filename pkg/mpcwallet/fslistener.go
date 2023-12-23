@@ -14,7 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package fswallet
+package mpcwallet
 
 import (
 	"context"
@@ -26,7 +26,7 @@ import (
 	"github.com/hyperledger/firefly-signer/internal/signermsgs"
 )
 
-func (w *fsWallet) startFilesystemListener(ctx context.Context) error {
+func (w *mpcWallet) startFilesystemListener(ctx context.Context) error {
 	if w.conf.DisableListener {
 		log.L(ctx).Debugf("Filesystem listener disabled")
 		close(w.fsListenerDone)
@@ -47,7 +47,7 @@ func (w *fsWallet) startFilesystemListener(ctx context.Context) error {
 	return nil
 }
 
-func (w *fsWallet) fsListenerLoop(ctx context.Context, done func(), events chan fsnotify.Event, errors chan error) {
+func (w *mpcWallet) fsListenerLoop(ctx context.Context, done func(), events chan fsnotify.Event, errors chan error) {
 	defer done()
 
 	for {
