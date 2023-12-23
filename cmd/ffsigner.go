@@ -29,7 +29,9 @@ import (
 	"github.com/hyperledger/firefly-signer/internal/rpcserver"
 	"github.com/hyperledger/firefly-signer/internal/signerconfig"
 	"github.com/hyperledger/firefly-signer/internal/signermsgs"
+	"github.com/hyperledger/firefly-signer/pkg/ethsigner"
 	"github.com/hyperledger/firefly-signer/pkg/fswallet"
+	"github.com/hyperledger/firefly-signer/pkg/mpcwallet"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -89,15 +91,20 @@ func run() error {
 		cancelCtx()
 	}()
 
-	if !config.GetBool(signerconfig.FileWalletEnabled) {
+	var wallet ethsigner.Wallet
+	switch {
+	case config.GetBool(signerconfig.FileWalletEnabled):
+		wallet, err = fswallet.NewFilesystemWallet(ctx, fswallet.ReadConfig(signerconfig.FileWalletConfig))
+	case config.GetBool(signerconfig.MPCWalletEnabled):
+		wallet, err = mpcwallet.NewMPCWallet(ctx, mpcwallet.ReadConfig(signerconfig.MPCWalletConfig))
+	default:
 		return i18n.NewError(ctx, signermsgs.MsgNoWalletEnabled)
 	}
-	fileWallet, err := fswallet.NewFilesystemWallet(ctx, fswallet.ReadConfig(signerconfig.FileWalletConfig))
 	if err != nil {
 		return err
 	}
 
-	server, err := rpcserver.NewServer(ctx, fileWallet)
+	server, err := rpcserver.NewServer(ctx, wallet)
 	if err != nil {
 		return err
 	}
