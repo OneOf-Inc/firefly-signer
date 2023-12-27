@@ -56,11 +56,14 @@ type signTxResponse struct {
 }
 
 func (w *mpcWallet) Sign(ctx context.Context, txn *ethsigner.Transaction, chainID int64) ([]byte, error) {
-	url := w.conf.WalletURL + "/api/mpc/key/" + w.conf.KeyID + "/sign-evm"
+	var fromStr string
+	_ = json.Unmarshal(txn.From, &fromStr)
+
+	url := fmt.Sprintf("%s/api/mpc/key/%s/sign-evm", w.conf.WalletURL, fromStr)
 	signTxReq := w.buildSignTxRequest(txn, chainID)
 	requestBody, _ := json.Marshal(signTxReq)
 
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(requestBody))
+	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(requestBody))
 	if err != nil {
 		return nil, err
 	}
@@ -75,10 +78,7 @@ func (w *mpcWallet) Sign(ctx context.Context, txn *ethsigner.Transaction, chainI
 	}
 	defer resp.Body.Close()
 
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
+	body, _ := io.ReadAll(resp.Body)
 
 	var signTxResp signTxResponse
 	err = json.Unmarshal(body, &signTxResp)
@@ -86,12 +86,15 @@ func (w *mpcWallet) Sign(ctx context.Context, txn *ethsigner.Transaction, chainI
 		return nil, err
 	}
 
-	return []byte(signTxResp.Message), nil
+	return []byte(signTxResp.Signature), nil
 }
 
 func (w *mpcWallet) buildSignTxRequest(txn *ethsigner.Transaction, chainID int64) *signTxRequest {
+	var fromStr string
+	_ = json.Unmarshal(txn.From, &fromStr)
+
 	return &signTxRequest{
-		From:     string(txn.From),
+		From:     fromStr,
 		To:       txn.To.String(),
 		Data:     hex.EncodeToString(txn.Data),
 		Value:    txn.Value.String(),

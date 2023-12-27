@@ -21,23 +21,18 @@ import "github.com/hyperledger/firefly-common/pkg/config"
 const (
 	// ConfigURL the url of the mpc wallet
 	ConfigURL = "url"
-	// ConfigKeyID the signer key
-	ConfigKeyID = "key"
 )
 
 type Config struct {
 	WalletURL string
-	KeyID     string
 }
 
 func InitConfig(section config.Section) {
 	section.AddKnownKey(ConfigURL)
-	section.AddKnownKey(ConfigKeyID)
 }
 
 func ReadConfig(section config.Section) *Config {
 	return &Config{
 		WalletURL: section.GetString(ConfigURL),
-		KeyID:     section.GetString(ConfigKeyID),
 	}
 }
