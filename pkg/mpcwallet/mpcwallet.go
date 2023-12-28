@@ -40,27 +40,30 @@ func NewMPCWallet(ctx context.Context, conf *Config) (ethsigner.Wallet, error) {
 }
 
 type signTxRequest struct {
-	From     string `json:"from"`
 	To       string `json:"to"`
 	Data     string `json:"data"`
 	Value    string `json:"value"`
-	GasLimit uint64 `json:"gas_limit"`
+	GasLimit uint64 `json:"gasLimit"`
 	ChainID  uint64 `json:"chainId"`
 }
 
 type signTxResponse struct {
 	KeyID     string `json:"keyId"`
-	Message   string `json:"message"`
 	Signature string `json:"signature"`
-	ASN1      string `json:"asn1"`
 }
 
 func (w *mpcWallet) Sign(ctx context.Context, txn *ethsigner.Transaction, chainID int64) ([]byte, error) {
 	var fromStr string
 	_ = json.Unmarshal(txn.From, &fromStr)
 
-	url := fmt.Sprintf("%s/api/mpc/key/%s/sign-evm", w.conf.WalletURL, fromStr)
-	signTxReq := w.buildSignTxRequest(txn, chainID)
+	url := fmt.Sprintf("%s/api/evm/%s/sign-evm", w.conf.WalletURL, fromStr)
+	signTxReq := &signTxRequest{
+		To:       txn.To.String(),
+		Data:     hex.EncodeToString(txn.Data),
+		Value:    txn.Value.String(),
+		GasLimit: txn.GasLimit.Uint64(),
+		ChainID:  uint64(chainID),
+	}
 	requestBody, _ := json.Marshal(signTxReq)
 
 	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(requestBody))
@@ -87,20 +90,6 @@ func (w *mpcWallet) Sign(ctx context.Context, txn *ethsigner.Transaction, chainI
 	}
 
 	return []byte(signTxResp.Signature), nil
-}
-
-func (w *mpcWallet) buildSignTxRequest(txn *ethsigner.Transaction, chainID int64) *signTxRequest {
-	var fromStr string
-	_ = json.Unmarshal(txn.From, &fromStr)
-
-	return &signTxRequest{
-		From:     fromStr,
-		To:       txn.To.String(),
-		Data:     hex.EncodeToString(txn.Data),
-		Value:    txn.Value.String(),
-		GasLimit: txn.GasLimit.Uint64(),
-		ChainID:  uint64(chainID),
-	}
 }
 
 func (w *mpcWallet) Initialize(ctx context.Context) error {
