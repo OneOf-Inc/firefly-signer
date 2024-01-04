@@ -1,4 +1,4 @@
-// Copyright © 2023 Kaleido, Inc.
+// Copyright © 2024 Kaleido, Inc.
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -19,12 +19,12 @@ package mpcwallet
 import (
 	"bytes"
 	"context"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/hyperledger/firefly-signer/pkg/ethsigner"
 	"github.com/hyperledger/firefly-signer/pkg/ethtypes"
 )
@@ -48,8 +48,8 @@ type signTxRequest struct {
 }
 
 type signTxResponse struct {
-	KeyID     string `json:"keyId"`
-	Signature string `json:"signature"`
+	KeyID    string `json:"keyId"`
+	SignedTx string `json:"signedTx"`
 }
 
 func (w *mpcWallet) Sign(ctx context.Context, txn *ethsigner.Transaction, chainID int64) ([]byte, error) {
@@ -59,8 +59,8 @@ func (w *mpcWallet) Sign(ctx context.Context, txn *ethsigner.Transaction, chainI
 	url := fmt.Sprintf("%s/api/evm/%s/sign-evm", w.conf.WalletURL, fromStr)
 	signTxReq := &signTxRequest{
 		To:       txn.To.String(),
-		Data:     hex.EncodeToString(txn.Data),
-		Value:    txn.Value.String(),
+		Data:     txn.Data.String(),
+		Value:    txn.Value.BigInt().String(),
 		GasLimit: txn.GasLimit.Uint64(),
 		ChainID:  uint64(chainID),
 	}
@@ -88,8 +88,12 @@ func (w *mpcWallet) Sign(ctx context.Context, txn *ethsigner.Transaction, chainI
 	if err != nil {
 		return nil, err
 	}
+	signedTxResp, err := hexutil.Decode(signTxResp.SignedTx)
+	if err != nil {
+		return nil, err
+	}
 
-	return []byte(signTxResp.Signature), nil
+	return signedTxResp, nil
 }
 
 func (w *mpcWallet) Initialize(ctx context.Context) error {
