@@ -43,8 +43,12 @@ var (
 	ConfigFileWalletMetadataKeyFileProperty      = ffc("config.fileWallet.metadata.keyFileProperty", "Go template to look up the key-file path from the metadata. Example: '{{ index .signing \"key-file\" }}'", "go-template")
 	ConfigFileWalletMetadataPasswordFileProperty = ffc("config.fileWallet.metadata.passwordFileProperty", "Go template to look up the password-file path from the metadata", "go-template")
 
-	ConfigMPCWalletEnabled = ffc("config.mpcWallet.enabled", "Whether the keystore filesystem wallet is enabled", "boolean")
-	ConfigMPCWalletURL     = ffc("config.mpcWallet.url", "URL of the MPC gateway service", "string")
+	ConfigMPCWalletEnabled                    = ffc("config.mpcWallet.enabled", "Whether the keystore filesystem wallet is enabled", "boolean")
+	ConfigMPCWalletURL                        = ffc("config.mpcWallet.url", "URL of the MPC gateway service", "string")
+	ConfigMPCWalletPath                       = ffc("config.mpcWallet.path", "Path on the filesystem where the metadata files (and/or key files) are located", "string")
+	ConfigMPCWalletFilenamesPrimaryBatchRegex = ffc("config.mpcWallet.filenames.primaryMatchRegex", "Regular expression run against key/metadata filenames to extract the address (takes precedence over primaryExt)", "regexp")
+	ConfigMPCWalletFilenamesPrimaryExt        = ffc("config.mpcWallet.filenames.primaryExt", "Extension for key/metadata files named by <ADDRESS>.<EXT>", "string")
+	ConfigMPCWalletDisableListener            = ffc("config.mpcWallet.disableListener", "Disable the filesystem listener that automatically detects the creation of new keystore files", "boolean")
 
 	ConfigServerAddress      = ffc("config.server.address", "Local address for the JSON/RPC server to listen on", "string")
 	ConfigServerPort         = ffc("config.server.port", "Port for the JSON/RPC server to listen on", "number")

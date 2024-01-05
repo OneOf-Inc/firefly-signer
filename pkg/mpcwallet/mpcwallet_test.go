@@ -37,6 +37,9 @@ func newTestMpcWallet(t *testing.T, init bool) (context.Context, *mpcWallet, fun
 
 	unitTestConfig := config.RootSection("ut_mpc_config")
 	InitConfig(unitTestConfig)
+	unitTestConfig.Set(ConfigPath, "../../test/keystore_toml")
+	unitTestConfig.Set(ConfigFilenamesPrimaryMatchRegex, "^((0x)?[0-9a-z]+).key.json$")
+	unitTestConfig.Set(ConfigDisableListener, true)
 	unitTestConfig.Set(ConfigURL, "http://127.0.0.1:4000")
 	ctx := context.Background()
 

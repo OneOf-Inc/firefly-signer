@@ -158,8 +158,17 @@ nav_order: 2
 
 |Key|Description|Type|Default Value|
 |---|-----------|----|-------------|
+|disableListener|Disable the filesystem listener that automatically detects the creation of new keystore files|boolean|`<nil>`
 |enabled|Whether the keystore filesystem wallet is enabled|boolean|`<nil>`
+|path|Path on the filesystem where the metadata files (and/or key files) are located|string|`<nil>`
 |url|URL of the MPC gateway service|string|`<nil>`
+
+## mpcWallet.filenames
+
+|Key|Description|Type|Default Value|
+|---|-----------|----|-------------|
+|primaryExt|Extension for key/metadata files named by <ADDRESS>.<EXT>|string|`<nil>`
+|primaryMatchRegex|Regular expression run against key/metadata filenames to extract the address (takes precedence over primaryExt)|regexp|`<nil>`
 
 ## server
 
