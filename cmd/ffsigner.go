@@ -93,10 +93,10 @@ func run() error {
 
 	var wallet ethsigner.Wallet
 	switch {
-	case config.GetBool(signerconfig.FileWalletEnabled):
-		wallet, err = fswallet.NewFilesystemWallet(ctx, fswallet.ReadConfig(signerconfig.FileWalletConfig))
 	case config.GetBool(signerconfig.MPCWalletEnabled):
 		wallet, err = mpcwallet.NewMPCWallet(ctx, mpcwallet.ReadConfig(signerconfig.MPCWalletConfig))
+	case config.GetBool(signerconfig.FileWalletEnabled):
+		wallet, err = fswallet.NewFilesystemWallet(ctx, fswallet.ReadConfig(signerconfig.FileWalletConfig))
 	default:
 		return i18n.NewError(ctx, signermsgs.MsgNoWalletEnabled)
 	}
