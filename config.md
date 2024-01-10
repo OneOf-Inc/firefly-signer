@@ -154,6 +154,13 @@ nav_order: 2
 |message|Configures the JSON key containing the log message|`string`|`message`
 |timestamp|Configures the JSON key containing the timestamp of the log|`string`|`@timestamp`
 
+## mpcWallet
+
+|Key|Description|Type|Default Value|
+|---|-----------|----|-------------|
+|enabled|Whether the keystore filesystem wallet is enabled|boolean|`<nil>`
+|url|URL of the MPC gateway service|string|`<nil>`
+
 ## server
 
 |Key|Description|Type|Default Value|

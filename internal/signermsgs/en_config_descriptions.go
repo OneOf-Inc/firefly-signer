@@ -1,4 +1,4 @@
-// Copyright © 2023 Kaleido, Inc.
+// Copyright © 2024 Kaleido, Inc.
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -42,6 +42,9 @@ var (
 	ConfigFileWalletMetadataFormat               = ffc("config.fileWallet.metadata.format", "Set this if the primary key file is a metadata file. Supported formats: auto (from extension) / filename / toml / yaml / json (please quote \"0x...\" strings in YAML)", "string")
 	ConfigFileWalletMetadataKeyFileProperty      = ffc("config.fileWallet.metadata.keyFileProperty", "Go template to look up the key-file path from the metadata. Example: '{{ index .signing \"key-file\" }}'", "go-template")
 	ConfigFileWalletMetadataPasswordFileProperty = ffc("config.fileWallet.metadata.passwordFileProperty", "Go template to look up the password-file path from the metadata", "go-template")
+
+	ConfigMPCWalletEnabled = ffc("config.mpcWallet.enabled", "Whether the keystore filesystem wallet is enabled", "boolean")
+	ConfigMPCWalletURL     = ffc("config.mpcWallet.url", "URL of the MPC gateway service", "string")
 
 	ConfigServerAddress      = ffc("config.server.address", "Local address for the JSON/RPC server to listen on", "string")
 	ConfigServerPort         = ffc("config.server.port", "Port for the JSON/RPC server to listen on", "number")
