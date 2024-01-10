@@ -8,6 +8,7 @@ env:
   AWS_ROLE_ARN: arn:aws:iam::961171757719:role/GithubActions-ECRPublicPowerUser
   AWS_REGION: us-east-1
   ECR_REPOSITORY: mpc-firefly-signer
+  ECR_REGISTRY_ALIAS: f8q0b6a6
 
 permissions:
   id-token: write   # This is required for requesting the JWT
@@ -45,6 +46,6 @@ jobs:
           # Build a docker container and
           # push it to ECR so that it can
           # be deployed to ECS.
-          docker buildx build --platform linux/amd64 -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY --all-tags
-          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+          docker buildx build --platform linux/amd64 -t $ECR_REGISTRY/$ECR_REGISTRY_ALIAS/$ECR_REPOSITORY:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REGISTRY_ALIAS/$ECR_REPOSITORY:latest .
+          docker push $ECR_REGISTRY/$ECR_REGISTRY_ALIAS/$ECR_REPOSITORY --all-tags
+          echo "image=$ECR_REGISTRY/$ECR_REGISTRY_ALIAS/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
