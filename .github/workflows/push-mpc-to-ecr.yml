@@ -6,7 +6,7 @@ on:
 
 env:
   AWS_ROLE_ARN: arn:aws:iam::961171757719:role/GithubActions-ECRPublicPowerUser
-  AWS_REGION: global
+  AWS_REGION: us-east-1
   ECR_REPOSITORY: mpc-firefly-signer
 
 permissions:
@@ -14,10 +14,10 @@ permissions:
   contents: read    # This is required for actions/checkout
 
 jobs:
-  deploy:
-    name: Deploy
+  push-to-ecr:
+    name: Push to ECR
     runs-on: ubuntu-latest
-    environment: production
+    environment: dev
 
     steps:
       - name: Checkout
