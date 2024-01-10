@@ -1,4 +1,4 @@
-// Copyright @ 2024 Kaleido, Inc.
+// Copyright © {{ YEAR }} {{ COMPANY }} Kaleido, Inc.
 //
 // SPDX-License-Identifier: Apache-2.0
 //
