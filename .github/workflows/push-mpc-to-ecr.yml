@@ -30,11 +30,11 @@ permissions:
 jobs:
   build-and-push-to-ecr:
     # Run if manually triggered or if PR is merged
-    if: ${{ github.event_name == "workflow_dispatch" || github.event.pull_request.merged }}
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.pull_request.merged }}
     name: Build & Push to ECR
     runs-on: ubuntu-latest
     # Set to "prod" environment if running on main branch, otherwise "dev"
-    environment: ${{ github.ref == "refs/heads/main" && "prod" || "dev" }}
+    environment: ${{ github.ref == 'refs/heads/main' && 'prod' || 'dev' }}
 
     steps:
       # Checkout the source
