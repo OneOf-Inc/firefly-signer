@@ -58,11 +58,13 @@ func (w *mpcWallet) Sign(ctx context.Context, txn *ethsigner.Transaction, chainI
 
 	url := fmt.Sprintf("%s/api/evm/%s/sign-evm", w.conf.WalletURL, fromStr)
 	signTxReq := &signTxRequest{
-		To:       txn.To.String(),
 		Data:     txn.Data.String(),
 		Value:    txn.Value.BigInt().String(),
 		GasLimit: txn.GasLimit.Uint64(),
 		ChainID:  uint64(chainID),
+	}
+	if txn.To != nil {
+		signTxReq.To = txn.To.String()
 	}
 	requestBody, _ := json.Marshal(signTxReq)
 
