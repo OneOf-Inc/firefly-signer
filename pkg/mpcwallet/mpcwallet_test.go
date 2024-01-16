@@ -55,6 +55,29 @@ func newTestMpcWallet(t *testing.T, init bool) (context.Context, *mpcWallet, fun
 	}
 }
 
+func newTestTOMLWallet(t *testing.T, init bool) (context.Context, *mpcWallet, func()) {
+	config.RootConfigReset()
+	logrus.SetLevel(logrus.TraceLevel)
+
+	unitTestConfig := config.RootSection("ut_fs_config")
+	InitConfig(unitTestConfig)
+	unitTestConfig.Set(ConfigPath, "../../test/keystore_toml")
+	unitTestConfig.Set(ConfigFilenamesPrimaryExt, ".toml")
+	unitTestConfig.Set(ConfigDisableListener, true)
+	unitTestConfig.Set(ConfigURL, "http://127.0.0.1:4000")
+	ctx := context.Background()
+
+	ff, err := NewMPCWallet(ctx, ReadConfig(unitTestConfig))
+	assert.NoError(t, err)
+	if init {
+		err = ff.Initialize(ctx)
+		assert.NoError(t, err)
+	}
+	return ctx, ff.(*mpcWallet), func() {
+		ff.Close()
+	}
+}
+
 func TestGetAccounts(t *testing.T) {
 	ctx, w, done := newTestMpcWallet(t, true)
 	defer done()
@@ -198,4 +221,65 @@ func TestSignDecodeErr(t *testing.T) {
 	}, 2022)
 	assert.Error(t, err)
 	assert.Nil(t, res)
+}
+
+func TestBadRegexp(t *testing.T) {
+	_, err := NewMPCWallet(context.Background(), &Config{
+		Path: "../../test/keystore_toml",
+		Filenames: FilenamesConfig{
+			PrimaryMatchRegex: "[[[[!bad",
+		},
+	})
+	assert.Regexp(t, "FF22056", err)
+}
+
+func TestMissingCaptureRegexp(t *testing.T) {
+	_, err := NewMPCWallet(context.Background(), &Config{
+		Path: "../../test/keystore_toml",
+		Filenames: FilenamesConfig{
+			PrimaryMatchRegex: ".*",
+		},
+	})
+	assert.Regexp(t, "FF22057", err)
+}
+
+func TestRefreshOK(t *testing.T) {
+	ctx, f, done := newTestMpcWallet(t, true)
+	defer done()
+	err := f.Refresh(ctx)
+	assert.NoError(t, err)
+}
+
+func TestRefreshFail(t *testing.T) {
+	config.RootConfigReset()
+	logrus.SetLevel(logrus.TraceLevel)
+
+	unitTestConfig := config.RootSection("ut_fs_config")
+	InitConfig(unitTestConfig)
+	unitTestConfig.Set(ConfigPath, "!!!")
+	unitTestConfig.Set(ConfigFilenamesPrimaryExt, ".toml")
+	unitTestConfig.Set(ConfigDisableListener, true)
+	ctx := context.Background()
+
+	ff, err := NewMPCWallet(ctx, ReadConfig(unitTestConfig))
+	assert.NoError(t, err)
+	defer ff.Close()
+
+	err = ff.Refresh(ctx)
+	assert.Error(t, err)
+}
+
+func TestListAccountsTOMLOk(t *testing.T) {
+	ctx, f, done := newTestTOMLWallet(t, true)
+	defer done()
+	accounts, err := f.GetAccounts(ctx)
+	assert.NoError(t, err)
+	assert.Len(t, accounts, 3)
+	all := map[string]bool{}
+	for _, a := range accounts {
+		all[a.String()] = true
+	}
+	assert.True(t, all["0x1f185718734552d08278aa70f804580bab5fd2b4"])
+	assert.True(t, all["0x497eedc4299dea2f2a364be10025d0ad0f702de3"])
+	assert.True(t, all["0x5d093e9b41911be5f5c4cf91b108bac5d130fa83"])
 }
