@@ -1,0 +1,24 @@
+# Name of this GitHub Actions workflow.
+name: Horusec
+
+on:
+  # Scan changed files in PRs (diff-aware scanning):
+  pull_request: {
+    branches: [ "matt/feature/mpc-signer" ]
+  }
+  # Scan on-demand through GitHub Actions interface:
+  workflow_dispatch: { }
+
+jobs:
+  horusec-security:
+    name: horusec-security
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+        with: # Required when commit authors is enabled
+          fetch-depth: 0
+      - name: Running Horusec Security
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/ZupIT/horusec/main/deployments/scripts/install.sh | bash -s latest
+          horusec start -p="./" -e="true"        
